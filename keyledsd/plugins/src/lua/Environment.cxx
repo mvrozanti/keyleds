@@ -133,6 +133,8 @@ void Environment::openKeyleds(Controller * controller)
     luaL_register(m_lua, nullptr, keyledsGlobals);
     lua_pop(m_lua, 1);
 
+    luaL_openlibs(m_lua);
+
     CHECK_TOP(m_lua, 0);
 }
 
