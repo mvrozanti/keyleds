@@ -21,6 +21,7 @@
 #include "keyledsd/tools/DynamicLibrary.h"
 #include <algorithm>
 #include <unistd.h>
+#include <array>
 
 LOGGING("effect-manager");
 

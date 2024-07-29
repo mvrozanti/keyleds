@@ -23,6 +23,7 @@
 #include <cstring>
 #include <lua.hpp>
 #include <sstream>
+#include <array>
 
 using keyleds::plugin::lua::LuaEffect;
 using namespace keyleds::lua;

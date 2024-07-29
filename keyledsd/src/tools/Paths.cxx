@@ -24,6 +24,7 @@
 #include <regex>
 #include <sstream>
 #include <stdexcept>
+#include <array>
 
 using keyleds::tools::paths::XDG;
 
