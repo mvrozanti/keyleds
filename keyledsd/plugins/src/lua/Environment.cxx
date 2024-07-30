@@ -20,6 +20,8 @@
 #include <cassert>
 #include <lua.hpp>
 #include <sstream>
+#include <fcntl.h>
+#include <unistd.h>
 
 
 namespace keyleds::lua {
@@ -97,12 +99,52 @@ static int luaWait(lua_State * lua)
     return lua_yield(lua, 2);
 }
 
+
+static int read_fifo(int fd, char* buffer, size_t size) {
+    ssize_t bytes_read = read(fd, buffer, size);
+    if (bytes_read < 0) {
+        if (errno != EAGAIN && errno != EWOULDBLOCK) {
+            perror("Failed to read from FIFO");
+        }
+        return -1;
+    }
+    return bytes_read;
+}
+
+static int process_data(lua_State* L) {
+    const char* fifo_path = lua_tostring(L, 1);
+    int fd = open(fifo_path, O_RDONLY | O_NONBLOCK);
+    if (fd == -1) {
+        perror("Failed to open FIFO");
+        return luaL_error(L, "Failed to open FIFO");
+    }
+
+    printf("FIFO opened successfully. File descriptor: %d\n", fd);
+
+    char buffer[1024];
+    while (true) {
+        ssize_t bytes_read = read(fd, buffer, sizeof(buffer));
+        if (bytes_read > 0) {
+            printf("Read %zd bytes from FIFO\n", bytes_read);
+            lua_pushlstring(L, buffer, bytes_read);
+        } else if (bytes_read == -1 && errno != EAGAIN) {
+            perror("Failed to read from FIFO");
+            close(fd);
+            return luaL_error(L, "Failed to read from FIFO");
+        }
+    }
+
+    close(fd);
+    return 0;
+}
+
 static const luaL_Reg keyledsGlobals[] = {
     { "fade",       luaNewInterpolator },
     { "print",      luaPrint    },
     { "thread",     luaNewThread },
     { "tocolor",    luaToColor  },
     { "wait",       luaWait     },
+    { "process_data", process_data },
     { nullptr, nullptr }
 };
 
